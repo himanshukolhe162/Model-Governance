@@ -26,7 +26,7 @@ if (process.env.FORGE_CLIENT_ID == null || process.env.FORGE_CLIENT_SECRET == nu
 
 let app = express();
 app.use('/', express.static(path.join(__dirname, 'public')));
-app.set('port', process.env.PORT || 3009);
+app.set('port', process.env.PORT || 3000);
 app.use('/', require('./routes/forge'));
 let server = app.listen(app.get('port'), function () {
   console.log('Starting at ' + (new Date()).toString());

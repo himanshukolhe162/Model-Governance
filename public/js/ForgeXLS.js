@@ -16,144 +16,82 @@
 // UNINTERRUPTED OR ERROR FREE.
 /////////////////////////////////////////////////////////////////////
 
-if (!window.jQuery) alert("jQuery is required for this sample");
-if (!window.XLSX) alert("Sheet JS is required for this sample");
+if (!window.jQuery) alert('jQuery is required for this sample');
+if (!window.XLSX) alert('Sheet JS is required for this sample');
 //var fs = require('fs');
 var ForgeXLS = {
   Utility: {
     Constants: {
-      BASE_URL: "https://developer.api.autodesk.com",
-      MODEL_DERIVATIVE_V2: "/modelderivative/v2/designdata/",
-      BIM360_BASE_URL: "/project/v1/",
-      HUB_ID: "b.1f6fef99-35a3-4627-9a31-5abae9e6a1c7" //"DPR Construction"
+      BASE_URL: 'https://developer.api.autodesk.com',
+      MODEL_DERIVATIVE_V2: '/modelderivative/v2/designdata/'
     },
 
     forgeGetRequest: function (url, token, callback) {
       jQuery.ajax({
         url: url,
         beforeSend: function (request) {
-          request.setRequestHeader("Authorization", "Bearer " + token);
+          request.setRequestHeader('Authorization', 'Bearer ' + token);
         },
         success: function (response) {
-          if (response.result && response.result === "success") {
+          if (response.result && response.result === 'success') {
             //pradnya
             //console.log('response');
             //console.log(response);
-
+            
             //var blob = new Blob(JSON.stringify(response), {type: "text/plain;charset=utf-8"});
             //saveAs(blob, "json2.txt");
 
             setTimeout(function () {
-              console.log("Data not ready... retry in 1 second");
+              console.log('Data not ready... retry in 1 second');
               ForgeXLS.Utility.forgeGetRequest(url, token, callback);
             }, 1000);
             return;
           }
-          if (callback) callback(response);
-        },
+          if (callback)
+            callback(response);
+        }
       });
     },
-
     getMetadata: function (urn, token, callback) {
-      console.log("Downloading metadata...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.MODEL_DERIVATIVE_V2 +
-          urn +
-          "/metadata",
-        token,
-        callback
-      );
+      console.log('Downloading metadata...');
+      this.forgeGetRequest(this.Constants.BASE_URL + this.Constants.MODEL_DERIVATIVE_V2 + urn + '/metadata', token, callback);
     },
 
     getHierarchy: function (urn, guid, token, callback) {
-      console.log("Downloading hierarchy...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.MODEL_DERIVATIVE_V2 +
-          urn +
-          "/metadata/" +
-          guid,
-        token,
-        callback
-      );
+      console.log('Downloading hierarchy...');
+      this.forgeGetRequest(this.Constants.BASE_URL + this.Constants.MODEL_DERIVATIVE_V2 + urn + '/metadata/' + guid, token, callback);
     },
 
     getProperties: function (urn, guid, token, callback) {
-      console.log("Downloading properties...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.MODEL_DERIVATIVE_V2 +
-          urn +
-          "/metadata/" +
-          guid +
-          "/properties",
-        token,
-        callback
-      );
-    },
-
-    getProjects: function (hubId, token, callback) {
-      console.log("Fetching Projects...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.BIM360_BASE_URL +
-          "hubs/" +
-          hubId +
-          "/projects",
-        token,
-        callback
-      );
-    },
-
-    getTopFolders: function (hubId, projectId, token, callback) {
-      console.log("Fetching Top Folders...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.BIM360_BASE_URL +
-          "hubs/" +
-          hubId +
-          "/projects/" +
-          projectId +
-          "/topFolders",
-        token,
-        callback
-      );
-    },
-
-    getFolderContent: function (projectId, folderId, token, callback) {
-      console.log("Fetching Folder Content...");
-      this.forgeGetRequest(
-        this.Constants.BASE_URL +
-          this.Constants.BIM360_BASE_URL +
-          "/projects" +
-          projectId +
-          "/folders/" +
-          folderId +
-          "/contents",
-        token,
-        callback
-      );
-    },
+      console.log('Downloading properties...');
+      this.forgeGetRequest(this.Constants.BASE_URL + this.Constants.MODEL_DERIVATIVE_V2 + urn + '/metadata/' + guid + '/properties', token, callback);
+    }
   },
 
   downloadXLSX: function (urn, token, status) {
+    // var fileName = decodeURIComponent(atob(urn).replace(/^.*[\\\/]/, '')) + '.xlsx';
+    // if (fileName.indexOf('.rvt') == -1) {
+    //   if (status) status(true, 'Not a Revit file, aborting.');
+    //   return;
+    // }
+
+    // if (status) {
+    //   status(false, 'Preparing ' + fileName);
+    //   status(false, 'Reading project information....');
+    // }
     var fileName = "test.xlsx";
     this.prepareTables(urn, token, function (tables) {
-      if (status) status(false, "Building XLSX file...");
+      if (status) status(false, 'Building XLSX file...');
 
       var wb = new Workbook();
       //Append Project specific values:
-      var jsonContent =
-        '{"projectId": "","projectName": "","modelId" :"","bim360URL": "","version": "", "fileType": "", "scope": ""';
-
+      var jsonContent='{"projectId": "","projectName": "","modelId" :"","bim360URL": "","version": "", "fileType": "", "scope": ""';
+      
       jQuery.each(tables, function (name, table) {
-        if (name.indexOf("<") == -1) {
-          // skip tables starting with <
-          console.log("table-" + name);
+        if (name.indexOf('<')==-1) { // skip tables starting with <
+          console.log('table-'+ name);
           //jsonContent = jsonContent + '"'+ name +'":[' + JSON.stringify(table);
-          jsonContent =
-            jsonContent + ', "' + name + '":' + JSON.stringify(table);
+          jsonContent = jsonContent + ', "'+ name +'":' + JSON.stringify(table);
           //console.log(table);
           var ws = ForgeXLS.sheetFromTable(table);
           wb.SheetNames.push(name);
@@ -167,42 +105,38 @@ var ForgeXLS = {
       //   jsonContent = jsonContent.slice(0, -1);
       // }
 
-      var jsonContent = jsonContent + "}";
+      var jsonContent=jsonContent + "}";
       console.log(jsonContent);
-      var wbout = XLSX.write(wb, {
-        bookType: "xlsx",
-        bookSST: true,
-        type: "binary",
-      });
-      saveAs(
-        new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
-        fileName
-      );
+      var wbout = XLSX.write(wb, {bookType: 'xlsx', bookSST: true, type: 'binary'});
+      saveAs(new Blob([s2ab(wbout)], {type: "application/octet-stream"}), fileName);
 
       //pradnya
-      var blob = new Blob([jsonContent], { type: "text/plain;charset=utf-8" });
+      var blob = new Blob([jsonContent], {type: "text/plain;charset=utf-8"});
       saveAs(blob, "modelJSON.txt");
 
-      if (status) status(true, "Downloading...");
+      if (status) status(true, 'Downloading...');
 
       //Now, save the JSON in SnowFlake table
-    });
+      
+    })
   },
 
   sheetFromTable: function (table) {
     var ws = {};
-    var range = { s: { c: 10000000, r: 10000000 }, e: { c: 0, r: 0 } };
+    var range = {s: {c: 10000000, r: 10000000}, e: {c: 0, r: 0}};
 
     var allProperties = [];
     table.forEach(function (object) {
       jQuery.each(object, function (propName, propValue) {
-        if (allProperties.indexOf(propName) == -1) allProperties.push(propName);
-      });
+        if (allProperties.indexOf(propName) == -1)
+          allProperties.push(propName);
+      })
     });
 
     table.forEach(function (object) {
       allProperties.forEach(function (propName) {
-        if (!object.hasOwnProperty(propName)) object[propName] = "";
+        if (!object.hasOwnProperty(propName))
+          object[propName] = '';
       });
     });
 
@@ -215,8 +149,8 @@ var ForgeXLS = {
     var R = 0;
     var C = 0;
     for (; C != propsNames.length; ++C) {
-      var cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-      ws[cell_ref] = { v: propsNames[C], t: "s" };
+      var cell_ref = XLSX.utils.encode_cell({c: C, r: R});
+      ws[cell_ref] = {v: propsNames[C], t: 's'};
     }
     R++;
 
@@ -227,51 +161,42 @@ var ForgeXLS = {
         if (range.s.c > C) range.s.c = 0;
         if (range.e.r < R) range.e.r = R;
         if (range.e.c < C) range.e.c = C;
-        var cell = { v: table[index][propName] };
+        var cell = {v: table[index][propName]};
         if (cell.v == null) return;
-        var cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+        var cell_ref = XLSX.utils.encode_cell({c: C, r: R});
 
-        if (typeof cell.v === "number") cell.t = "n";
-        else if (typeof cell.v === "boolean") cell.t = "b";
+        if (typeof cell.v === 'number') cell.t = 'n';
+        else if (typeof cell.v === 'boolean') cell.t = 'b';
         else if (cell.v instanceof Date) {
-          cell.t = "n";
+          cell.t = 'n';
           cell.z = XLSX.SSF._table[14];
           cell.v = datenum(cell.v);
-        } else cell.t = "s";
+        }
+        else cell.t = 's';
 
         ws[cell_ref] = cell;
         C++;
       });
       R++;
     }
-    if (range.s.c < 10000000) ws["!ref"] = XLSX.utils.encode_range(range);
+    if (range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
     return ws;
   },
 
   prepareTables: function (urn, token, callback) {
     this.Utility.getMetadata(urn, token, function (metadata) {
       if (metadata.data.metadata.length == 0) {
-        alert("Unexpected metadata");
+        alert('Unexpected metadata');
         return;
       }
       var guid = metadata.data.metadata[0].guid;
       //var guid = 'a4e4238d-a839-5b6a-ad55-42f5e125f820' ; not working with urn: 'dXJuOmFkc2sud2lwcHJvZDpmcy5maWxlOnZmLlZSSl9aX2E4UXRXNU4wM0kyM3RSSlE_dmVyc2lvbj0y'
 
-      ForgeXLS.Utility.getProjects(ForgeXLS.Utility.HUB_ID, token, function(projects){
-        // Filter and find a project, and pass it's id to next calls
-        ForgeXLS.Utility.getTopFolders(ForgeXLS.Utility.HUB_ID, projectId, token, function(topFolders){
-          //
-          ForgeXLS.Utility.getFolderContent(projectId, folderId, token, function(folderContent){
-            //
-            ForgeXLS.Utility.getHierarchy(urn, guid, token, function (hierarchy) {
-              ForgeXLS.Utility.getProperties(urn, guid, token, function (properties) {
-                callback(ForgeXLS.prepareRawData(hierarchy, properties));
-              });
-            });
-          })  
-        })
-      })
-
+      ForgeXLS.Utility.getHierarchy(urn, guid, token, function (hierarchy) {
+        ForgeXLS.Utility.getProperties(urn, guid, token, function (properties) {
+          callback(ForgeXLS.prepareRawData(hierarchy, properties));
+        });
+      });
     });
   },
 
@@ -293,9 +218,12 @@ var ForgeXLS = {
 
   getAllElementsOnCategory: function (ids, category) {
     category.forEach(function (item) {
-      if (typeof item.objects === "undefined") {
-        if (!ids.indexOf(item.objectid) >= 0) ids.push(item.objectid);
-      } else ForgeXLS.getAllElementsOnCategory(ids, item.objects);
+      if (typeof(item.objects) === 'undefined') {
+        if (!ids.indexOf(item.objectid) >= 0)
+          ids.push(item.objectid);
+      }
+      else
+        ForgeXLS.getAllElementsOnCategory(ids, item.objects);
     });
   },
 
@@ -304,27 +232,22 @@ var ForgeXLS = {
     objCollection.data.collection.forEach(function (obj) {
       if (obj.objectid != id) return;
 
-      data["Viewer ID"] = id;
-      data["Revit ID"] = obj.name.match(/\d+/g)[0];
-      data["Name"] = obj.name.replace("[" + data["Revit ID"] + "]", "").trim();
-      data["GUID"] = obj.externalId;
+      data['Viewer ID'] = id;
+      data['Revit ID'] = obj.name.match(/\d+/g)[0];
+      data['Name'] = obj.name.replace('[' + data['Revit ID'] + ']', '').trim();
 
       for (var propGroup in obj.properties) {
-        if (propGroup.indexOf("__") > -1) break;
+        if (propGroup.indexOf('__') > -1) break;
         if (obj.properties.hasOwnProperty(propGroup)) {
           for (var propName in obj.properties[propGroup]) {
-            if (
-              obj.properties[propGroup].hasOwnProperty(propName) &&
-              !Array.isArray(obj.properties[propGroup][propName])
-            )
-              data[propGroup + ":" + propName] =
-                obj.properties[propGroup][propName];
+            if (obj.properties[propGroup].hasOwnProperty(propName) && !Array.isArray(obj.properties[propGroup][propName]))
+              data[propGroup + ':' + propName] = obj.properties[propGroup][propName];
           }
         }
       }
     });
     return data;
-  },
+  }
 };
 
 function Workbook() {
@@ -342,6 +265,6 @@ function datenum(v, date1904) {
 function s2ab(s) {
   var buf = new ArrayBuffer(s.length);
   var view = new Uint8Array(buf);
-  for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
+  for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
   return buf;
 }
